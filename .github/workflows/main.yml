@@ -1,0 +1,52 @@
+name: Android Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+      
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 30
+          build-tools: 30.0.3
+
+      - name: Setup Unity
+        uses: game-ci/unity-builder@v2
+        with:
+          unityVersion: 2021.3.11f1
+          targetPlatform: Android
+
+      - name: Build project
+        run: |
+          ./gradlew build
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: MyVirtualIsland-APK
+          path: app/build/outputs/apk/release/app-release.apk
